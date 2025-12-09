@@ -1,17 +1,21 @@
 # MinerU文档翻译工具 - 配置文件
 
+# 调试模式
+debug:
+  enabled: true  # 是否启用调试模式（打印详细的 API 请求信息）
+
 # API配置
 api:
   # MinerU API Token（必填）
   # 访问 https://mineru.net 获取
   mineru_token: "eyJ0eXBlIjoiSldUIiwiYWxnIjoiSFM1MTIifQ.eyJqdGkiOiIxOTMwMDU4NyIsInJvbCI6IlJPTEVfUkVHSVNURVIiLCJpc3MiOiJPcGVuWExhYiIsImlhdCI6MTc2NTE4Mjg1MywiY2xpZW50SWQiOiJsa3pkeDU3bnZ5MjJqa3BxOXgydyIsInBob25lIjoiIiwib3BlbklkIjpudWxsLCJ1dWlkIjoiZGM3MDAzYTQtOTgzMi00NjVhLWEzOGYtM2NiNmE4MjU5ZjgxIiwiZW1haWwiOiIiLCJleHAiOjE3NjYzOTI0NTN9.wem08J7xwJ5fU7TWAIl2viQBB9z8OQPx57VrdCCgDTJWUZdb6EF5vkrJeHJJByaT8ckk_pAh7wZNY-Jy2Hnp9A"
 
-  # 大纲生成 API 配置（Vision API）
+  # 大纲生成 API 配置
   outline_api_key: "sk-mQVaSBa9k2hu3iNTMziOTNwOPYqDu73EC77QwA5X0uz8R4cp"
   outline_api_base_url: "https://liangjiewis.com/v1"
   outline_api_model: "gemini-2.5-flash"
 
-  # 翻译 API 配置（OpenAI-compatible）
+  # 翻译 API 配置
   translation_api_key: "sk-mQVaSBa9k2hu3iNTMziOTNwOPYqDu73EC77QwA5X0uz8R4cp"
   translation_api_base_url: "https://liangjiewis.com/v1"
   translation_api_model: "gemini-2.5-flash"
@@ -19,7 +23,7 @@ api:
   # API调用参数（两个API共用）
   temperature: 0.3
   max_tokens: 65536
-  timeout: 120
+  timeout: 180  # API调用超时时间（秒），降低到180避免长时间挂起
 
 # 并发控制配置
 concurrency:
@@ -27,13 +31,13 @@ concurrency:
   max_files: 10
 
   # 翻译并发控制（自适应速率限制）
-  initial_translation_workers: 20    # 初始翻译并发数
-  max_translation_workers: 100       # 最大翻译并发数
+  initial_translation_workers: 100      # 初始翻译并发数
+  max_translation_workers: 100         # 最大翻译并发数
   min_translation_workers: 1         # 最小翻译并发数（遇到429错误时的保底值）
   rate_limit_backoff: 0.5            # 遇到429错误时的缩减系数
-  rate_limit_increase: 1.2           # 成功时的增长系数
-  success_threshold: 0.95            # 成功率阈值（超过此值才增加并发）
-  increase_interval: 30              # 持续成功多少秒后尝试增加并发
+  rate_limit_increase: 1           # 成功时的增长系数
+  success_threshold: 1             # 成功率阈值
+  increase_interval: 30          # 持续成功多少秒后尝试增加并发
 
 # 路径配置
 paths:
@@ -61,3 +65,16 @@ output:
   pdf_folder: "PDF"             # PDF输出
   docx_folder: "DOCX"           # DOCX输出
   cache_folder: "cache"         # 缓存文件夹
+
+# PDF处理配置
+pdf_processing:
+  # 大纲生成时的PDF大小限制
+  max_pdf_size_mb: 20           # PDF文件超过此大小(MB)时，自动提取部分页面
+  max_pages_for_outline: 10   # 大文件提取的最大页数（用于生成大纲）
+
+  # 说明：
+  # - 小于 max_pdf_size_mb 的文件会完整发送给 API
+  # - 超过限制的文件只提取前 max_pages_for_outline 页
+  # - 学术文档前几页通常包含目录，足以生成完整大纲
+  # - 如果遇到 413 错误，可以降低这两个值（例如 5MB 和 8页）
+

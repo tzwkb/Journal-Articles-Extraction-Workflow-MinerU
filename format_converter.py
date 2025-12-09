@@ -54,51 +54,71 @@ class FormatConverter:
         if 'pdf' in formats:
             self.logger.info("正在生成PDF...")
             if output_paths and 'pdf_original' in output_paths:
-                self._html_to_pdf(original_html, output_paths['pdf_original'])
-                self._html_to_pdf(translated_html, output_paths['pdf_translated'])
+                self._html_to_pdf(html_original_path, output_paths['pdf_original'])
+                self._html_to_pdf(html_translated_path, output_paths['pdf_translated'])
             else:
-                self._html_to_pdf(original_html, "original.pdf")
-                self._html_to_pdf(translated_html, "translated.pdf")
+                self._html_to_pdf(html_original_path, "original.pdf")
+                self._html_to_pdf(html_translated_path, "translated.pdf")
             self.logger.success("PDF已生成")
 
         if 'docx' in formats:
             self.logger.info("正在生成DOCX...")
             if output_paths and 'docx_original' in output_paths:
-                self._html_to_docx(original_html, output_paths['docx_original'])
-                self._html_to_docx(translated_html, output_paths['docx_translated'])
+                self._html_to_docx(html_original_path, output_paths['docx_original'])
+                self._html_to_docx(html_translated_path, output_paths['docx_translated'])
             else:
-                self._html_to_docx(original_html, "original.docx")
-                self._html_to_docx(translated_html, "translated.docx")
+                self._html_to_docx(html_original_path, "original.docx")
+                self._html_to_docx(html_translated_path, "translated.docx")
             self.logger.success("DOCX已生成")
 
-    def _html_to_pdf(self, html_content: str, filename_or_path):
+    def _html_to_pdf(self, html_path, output_path):
         """
-        HTML转PDF（使用Playwright）
+        HTML转PDF（使用Playwright）- 增加超时和优化
 
         Args:
-            html_content: HTML内容
-            filename_or_path: 输出文件名或完整路径
+            html_path: HTML文件路径（Path对象或字符串）
+            output_path: 输出PDF路径（Path对象或字符串）
         """
+        # 确保是Path对象
+        html_path = Path(html_path)
+        
         # 判断是文件名还是完整路径
-        if isinstance(filename_or_path, (str, Path)) and (Path(filename_or_path).parent != Path('.')):
-            output_path = Path(filename_or_path)
+        if isinstance(output_path, (str, Path)) and (Path(output_path).parent != Path('.')):
+            output_path = Path(output_path)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            pdf_dir = output_path.parent
-            filename = output_path.name
         else:
             pdf_dir = self.output_base / self.config['output']['pdf_folder']
             pdf_dir.mkdir(parents=True, exist_ok=True)
-            filename = filename_or_path
-            output_path = pdf_dir / filename
-
-        html_path = pdf_dir / f"{filename}.html"
-        html_path.write_text(html_content, encoding='utf-8')
+            output_path = pdf_dir / output_path
 
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch()
+                # 启动浏览器（禁用超时）
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process']
+                )
                 page = browser.new_page()
-                page.goto(f"file:///{html_path.absolute()}")
+                
+                # 设置更长的超时时间和等待策略
+                page.set_default_timeout(180000)
+                
+                # 使用 file:// 协议加载本地HTML
+                file_url = f"file:///{html_path.absolute().as_posix()}"
+                self.logger.info(f"  加载HTML: {file_url}")
+                
+                # 导航到页面，等待网络空闲（图片加载完成）
+                page.goto(
+                    file_url,
+                    wait_until='networkidle',  # 等待网络空闲
+                    timeout=180000
+                )
+                
+                # 额外等待，确保所有图片加载完成
+                page.wait_for_timeout(2000)
+                
+                # 生成PDF
+                self.logger.info(f"  生成PDF: {output_path}")
                 page.pdf(
                     path=str(output_path),
                     format='A4',
@@ -110,60 +130,60 @@ class FormatConverter:
                         'left': '1cm'
                     }
                 )
+                
                 browser.close()
-
-            # 删除临时HTML文件
-            if html_path.exists():
-                html_path.unlink()
+                self.logger.success(f"  ✓ PDF已生成: {output_path.name}")
 
         except Exception as e:
             self.logger.error(f"PDF生成失败: {str(e)}")
-            # 即使失败也尝试清理临时文件
-            if html_path.exists():
-                html_path.unlink()
             self.logger.error("请确保已安装 Playwright: pip install playwright && playwright install chromium")
 
-    def _html_to_docx(self, html_content: str, filename_or_path):
+    def _html_to_docx(self, html_path, output_path):
         """
-        HTML转DOCX
+        HTML转DOCX（使用pandoc）
 
         Args:
-            html_content: HTML内容
-            filename_or_path: 输出文件名或完整路径
+            html_path: HTML文件路径（Path对象或字符串）
+            output_path: 输出DOCX路径（Path对象或字符串）
         """
+        # 确保是Path对象
+        html_path = Path(html_path)
+        
         # 判断是文件名还是完整路径
-        if isinstance(filename_or_path, (str, Path)) and (Path(filename_or_path).parent != Path('.')):
-            output_path = Path(filename_or_path)
+        if isinstance(output_path, (str, Path)) and (Path(output_path).parent != Path('.')):
+            output_path = Path(output_path)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            docx_dir = output_path.parent
-            filename = output_path.name
         else:
             docx_dir = self.output_base / self.config['output']['docx_folder']
             docx_dir.mkdir(parents=True, exist_ok=True)
-            filename = filename_or_path
-            output_path = docx_dir / filename
-
-        html_path = docx_dir / f"{filename}.html"
-        html_path.write_text(html_content, encoding='utf-8')
+            output_path = docx_dir / output_path
 
         try:
-            subprocess.run([
+            self.logger.info(f"  转换DOCX: {html_path} -> {output_path}")
+            
+            # 使用pandoc转换，添加 --extract-media 参数以提取图片
+            result = subprocess.run([
                 'pandoc',
                 str(html_path),
-                '-o', str(output_path)
-            ], check=True)
+                '-o', str(output_path),
+                '--extract-media', str(output_path.parent),  # 提取图片到同目录
+                '--resource-path', str(html_path.parent)  # 指定资源查找路径
+            ], 
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=120  # 120秒超时
+            )
+            
+            self.logger.success(f"  ✓ DOCX已生成: {output_path.name}")
 
-            # 删除临时HTML文件
-            if html_path.exists():
-                html_path.unlink()
-
+        except subprocess.TimeoutExpired:
+            self.logger.error(f"DOCX生成超时（120秒）")
         except subprocess.CalledProcessError as e:
-            self.logger.error(f"DOCX生成失败: {str(e)}")
-            # 即使失败也尝试清理临时文件
-            if html_path.exists():
-                html_path.unlink()
+            self.logger.error(f"DOCX生成失败: {e.stderr}")
         except FileNotFoundError:
             self.logger.error("pandoc未安装，跳过DOCX生成")
-            # 清理临时文件
-            if html_path.exists():
-                html_path.unlink()
+            self.logger.error("安装方法：")
+            self.logger.error("  Windows: choco install pandoc")
+            self.logger.error("  Mac: brew install pandoc")
+            self.logger.error("  Linux: apt-get install pandoc")

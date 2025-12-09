@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+
+    <!-- MathJax 3.x for LaTeX rendering -->
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -11,113 +28,176 @@
             box-sizing: border-box;
         }
 
+        /* ================================================================= */
+        /* 通用文档样式优化：主次清晰，阅读有序 */
+        /* ================================================================= */
         body {
             font-family: "Times New Roman", "SimSun", serif;
-            font-size: 12pt;
-            line-height: 1.6;
+            /* 确保正文基础字号为 16px (1em)，这是最佳阅读尺寸 */
+            font-size: 1.0em;
+            /* 增加行高，减少文字拥挤感 */
+            line-height: 1.65;
             color: #333;
+            background: #f5f5f5;
+            /* 调整最大宽度，避免单行文字过长，提高阅读效率 */
+            max-width: 38em;
         }
 
+        /* ================================================================= */
+        /* 页面布局结构 - 允许内容自然流动跨页 */
+        /* ================================================================= */
         .page {
+            /* 源PDF每一页结束后强制分页 */
             page-break-after: always;
-            padding: 3cm 2cm;  /* 增加上下边距为页眉页脚留空间 */
-            min-height: 29.7cm;
             width: 21cm;
-            margin: 0 auto;
+            /* 最小高度保证短内容也有合适的页面高度 */
+            min-height: 29.7cm;
+            margin: 1cm auto;
+            padding: 0 2cm;
             background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* 页面内容区域 - 避免与页眉页脚重叠 */
-        .page-content {
-            min-height: 23.7cm;  /* 29.7cm - 3cm(上) - 3cm(下) */
-        }
-
-        /* 页眉 - 固定在页面顶部 */
+        /* 页眉固定区域 */
         .header {
-            position: absolute;
-            top: 1cm;
-            left: 2cm;
-            right: 2cm;
-            color: #666;
-            font-size: 0.85em;
-            font-style: italic;
+            min-height: 2cm;
+            padding: 0.8cm 2cm 0.5cm 2cm;
             border-bottom: 1px solid #ddd;
-            padding-bottom: 8px;
-        }
-
-        /* 页脚 - 固定在页面底部 */
-        .footer {
-            position: absolute;
-            bottom: 1cm;
-            left: 2cm;
-            right: 2cm;
             color: #666;
-            font-size: 0.85em;
+            font-size: 10pt;
             font-style: italic;
+        }
+
+        /* 页面主内容区域 */
+        .page-content {
+            flex: 1;
+            padding: 1cm 2cm;
+            /* 允许内容自然流动，跨越多个打印页 */
+        }
+
+        /* 页脚固定区域 */
+        .footer-container {
+            min-height: 2cm;
+            padding: 0.5cm 2cm 0.8cm 2cm;
             border-top: 1px solid #ddd;
-            padding-top: 8px;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* 页码样式 - 独立显示在右下角 */
-        .page-number {
-            position: absolute;
-            bottom: 0.5cm;
-            right: 2cm;
+        .footer {
             color: #666;
-            font-size: 0.9em;
-            font-weight: normal;
+            font-size: 10pt;
+            font-style: italic;
+            flex: 1;
         }
 
-        /* 文本段落 */
-        .text {
-            margin: 15px 0;
+        .page-number {
+            color: #666;
+            font-size: 10pt;
+            margin-left: 1cm;
+            white-space: nowrap;
+        }
+
+        /* 段落样式 */
+        p, .text {
+            /* 适当增加段落间距 */
+            margin: 1em 0;
             text-align: justify;
         }
 
-        /* 标题级别 */
-        h1, h2, h3, h4 {
-            margin-top: 20px;
-            margin-bottom: 10px;
+        /* ================================================================= */
+        /* 标题层级定义：H1-H4 强调层级递减 */
+        /* ================================================================= */
+        /* 统一清除原有标题的默认边距，使用自定义的更合理的间距 */
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 0;
+            margin-bottom: 0;
+            line-height: 1.2; /* 标题行高略小，更紧凑 */
             font-weight: bold;
         }
 
+        /* H1: 刊物/文件最高标题（特粗、最大） */
         h1 {
-            font-size: 1.8em;
-            border-bottom: 2px solid #333;
-            padding-bottom: 5px;
+            font-size: 2.2em;
+            font-weight: 900;      /* 最粗 */
+            margin-top: 2.0em;     /* 顶部间距最大 */
+            margin-bottom: 0.6em;
+            text-align: center;    /* 居中常用于最高级标题 */
         }
 
+        /* H2: 文章主标题/主要章节 (粗体、较大) */
         h2 {
-            font-size: 1.5em;
+            font-size: 1.75em;
+            font-weight: 700;      /* 粗体 */
+            margin-top: 1.8em;
+            margin-bottom: 0.5em;
+            border-bottom: 1px solid #ccc; /* 增加底线以强调章节划分 */
+            padding-bottom: 0.2em;
         }
 
+        /* H3: 小节标题 (半粗体、适中) */
         h3 {
-            font-size: 1.3em;
+            font-size: 1.4em;
+            font-weight: 600;      /* 半粗体 */
+            margin-top: 1.5em;
+            margin-bottom: 0.4em;
         }
 
+        /* H4: 次级小节标题 (中等粗细、略大于正文) */
         h4 {
-            font-size: 1.1em;
+            font-size: 1.15em;
+            font-weight: 500;      /* 中等粗细 */
+            margin-top: 1.3em;
+            margin-bottom: 0.3em;
         }
 
-        /* 图片 */
+        /* H5: 强调段落/项目列表标题 (与正文同大，但使用颜色/斜体/粗细区分) */
+        h5 {
+            font-size: 1.0em;
+            font-weight: 600;
+            font-style: italic;
+            margin-top: 1em;
+            color: #555; /* 颜色略深 */
+        }
+
+        /* H6: 注释/来源/图片说明 (略小，使用柔和颜色弱化) */
+        h6 {
+            font-size: 0.9em;
+            font-weight: 400;
+            color: #777;           /* 颜色更浅 */
+            margin-top: 0.8em;
+            text-align: right;
+        }
+
+        /* ================================================================= */
+        /* 图片和媒体样式 */
+        /* ================================================================= */
+        /* 图片容器 */
         .image {
             text-align: center;
-            margin: 20px 0;
+            margin: 2em 0; /* 增大间距，使图片与正文分隔清晰 */
+            page-break-inside: avoid;
         }
 
         .image img {
             max-width: 100%;
             height: auto;
+            display: block;
+            margin: 1.5em auto; /* 图片上下间距略大 */
             border: 1px solid #ddd;
+            border-radius: 4px; /* 柔化图片边缘 */
             padding: 5px;
+            background: white;
         }
 
         .image-caption {
             margin-top: 10px;
             font-size: 0.9em;
-            color: #666;
+            color: #777; /* 与 H6 类似的弱化颜色 */
             font-style: italic;
         }
 
@@ -125,6 +205,7 @@
         .table-container {
             margin: 20px 0;
             overflow-x: auto;
+            page-break-inside: avoid;
         }
 
         table {
@@ -144,31 +225,43 @@
             font-weight: bold;
         }
 
-        /* 打印样式 */
+        /* 打印样式 - 允许内容跨页，页眉在首页顶部，页脚在末页底部 */
         @media print {
+            body {
+                background: white;
+            }
+
             .page {
                 margin: 0;
-                padding: 3cm 2cm;
+                box-shadow: none;
+                /* 每个源PDF页结束后分页 */
+                page-break-after: always;
+                /* 允许内容在源PDF页内部跨打印页 */
+                min-height: 29.7cm;
             }
 
             .header {
-                top: 0.8cm;
-                font-size: 9pt;
+                padding: 0.8cm 2cm 0.5cm 2cm;
+                /* 避免页眉跨页断裂 */
+                page-break-inside: avoid;
+                page-break-after: avoid;
             }
 
-            .footer {
-                bottom: 0.8cm;
-                font-size: 9pt;
+            .page-content {
+                padding: 1cm 2cm;
+                /* 内容允许自然流动跨页 */
             }
 
-            .page-number {
-                bottom: 0.5cm;
-                font-size: 9pt;
+            .footer-container {
+                padding: 0.5cm 2cm 0.8cm 2cm;
+                /* 避免页脚跨页断裂 */
+                page-break-inside: avoid;
+                page-break-before: avoid;
             }
 
-            /* 使用CSS计数器自动生成页码 */
             @page {
                 margin: 0;
+                size: A4;
             }
         }
     </style>
@@ -176,48 +269,76 @@
 <body>
 {% for page_idx, items in pages.items() %}
     <div class="page">
-        {% for item in items %}
-            {% if item.type == 'header' %}
-                <div class="header">{{ item.text }}</div>
-
-            {% elif item.type == 'text' %}
-                {% set text_content = item.text_zh if language == 'zh' else item.text %}
-                {% if item.text_level == 1 %}
-                    <h1 class="text">{{ text_content }}</h1>
-                {% elif item.text_level == 2 %}
-                    <h2 class="text">{{ text_content }}</h2>
-                {% elif item.text_level == 3 %}
-                    <h3 class="text">{{ text_content }}</h3>
-                {% elif item.text_level == 4 %}
-                    <h4 class="text">{{ text_content }}</h4>
-                {% else %}
-                    <p class="text">{{ text_content }}</p>
+        <!-- 页眉区域 -->
+        <div class="header">
+            {% for item in items %}
+                {% if item.type == 'header' %}
+                    {{ item.text }}
                 {% endif %}
+            {% endfor %}
+        </div>
 
-            {% elif item.type == 'image' %}
-                <div class="image">
-                    {% if item.img_path %}
-                        <img src="{{ item.img_path }}" alt="Image">
+        <!-- 页面内容区域 -->
+        <div class="page-content">
+            {% for item in items %}
+                {% if item.type == 'text' %}
+                    {% set text_content = item.text_zh if language == 'zh' else item.text %}
+                    {% if item.text_level == 1 %}
+                        <h1>{{ text_content }}</h1>
+                    {% elif item.text_level == 2 %}
+                        <h2>{{ text_content }}</h2>
+                    {% elif item.text_level == 3 %}
+                        <h3>{{ text_content }}</h3>
+                    {% elif item.text_level == 4 %}
+                        <h4>{{ text_content }}</h4>
+                    {% elif item.text_level == 5 %}
+                        <h5>{{ text_content }}</h5>
+                    {% elif item.text_level == 6 %}
+                        <h6>{{ text_content }}</h6>
+                    {% else %}
+                        <p class="text">{{ text_content }}</p>
                     {% endif %}
-                    {% if item.image_caption %}
-                        {% set caption = item.caption_zh if language == 'zh' else item.image_caption|join(' ') %}
-                        <p class="image-caption">{{ caption }}</p>
+
+                {% elif item.type == 'image' %}
+                    <div class="image">
+                        {% if item.img_path_absolute %}
+                            <!-- 使用绝对路径用于 PDF/DOCX 转换 -->
+                            <img src="file:///{{ item.img_path_absolute }}" alt="Image" onerror="this.src='{{ item.img_path }}'; this.onerror=function(){this.style.display='none'; this.parentElement.innerHTML+='<p style=color:red>[图片加载失败]</p>'}">
+                        {% elif item.img_path %}
+                            <!-- 备用：相对路径用于纯 HTML 查看 -->
+                            <img src="{{ item.img_path }}" alt="Image" onerror="this.style.display='none'; this.parentElement.innerHTML+='<p style=color:red>[图片加载失败: {{ item.img_path }}]</p>'">
+                        {% endif %}
+                        {% if item.image_caption %}
+                            {% set caption = item.caption_zh if language == 'zh' else item.image_caption|join(' ') %}
+                            <p class="image-caption">{{ caption }}</p>
+                        {% endif %}
+                    </div>
+
+                {% elif item.type == 'table' %}
+                    <div class="table-container">
+                        {{ item.table_body|safe }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- 页脚区域 -->
+        <div class="footer-container">
+            <div class="footer">
+                {% for item in items %}
+                    {% if item.type == 'footer' %}
+                        {{ item.text }}
                     {% endif %}
-                </div>
-
-            {% elif item.type == 'table' %}
-                <div class="table-container">
-                    {{ item.table_body|safe }}
-                </div>
-
-            {% elif item.type == 'footer' %}
-                <div class="footer">{{ item.text }}</div>
-
-            {% elif item.type == 'page_number' %}
-                <!-- 页码单独显示在右下角 -->
-                <div class="page-number">{{ item.text }}</div>
-            {% endif %}
-        {% endfor %}
+                {% endfor %}
+            </div>
+            <div class="page-number">
+                {% for item in items %}
+                    {% if item.type == 'page_number' %}
+                        {{ item.text }}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
     </div>
 {% endfor %}
 </body>

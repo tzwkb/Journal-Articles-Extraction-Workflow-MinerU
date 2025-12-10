@@ -8,15 +8,15 @@ debug:
 api:
   # MinerU API Token（必填）
   # 访问 https://mineru.net 获取
-  mineru_token: "eyJ0eXBlIjoiSldUIiwiYWxnIjoiSFM1MTIifQ.eyJqdGkiOiIxOTMwMDU4NyIsInJvbCI6IlJPTEVfUkVHSVNURVIiLCJpc3MiOiJPcGVuWExhYiIsImlhdCI6MTc2NTE4Mjg1MywiY2xpZW50SWQiOiJsa3pkeDU3bnZ5MjJqa3BxOXgydyIsInBob25lIjoiIiwib3BlbklkIjpudWxsLCJ1dWlkIjoiZGM3MDAzYTQtOTgzMi00NjVhLWEzOGYtM2NiNmE4MjU5ZjgxIiwiZW1haWwiOiIiLCJleHAiOjE3NjYzOTI0NTN9.wem08J7xwJ5fU7TWAIl2viQBB9z8OQPx57VrdCCgDTJWUZdb6EF5vkrJeHJJByaT8ckk_pAh7wZNY-Jy2Hnp9A"
+  mineru_token: ""
 
   # 大纲生成 API 配置
-  outline_api_key: "sk-mQVaSBa9k2hu3iNTMziOTNwOPYqDu73EC77QwA5X0uz8R4cp"
+  outline_api_key: ""
   outline_api_base_url: "https://liangjiewis.com/v1"
   outline_api_model: "gemini-2.5-flash"
 
   # 翻译 API 配置
-  translation_api_key: "sk-mQVaSBa9k2hu3iNTMziOTNwOPYqDu73EC77QwA5X0uz8R4cp"
+  translation_api_key: ""
   translation_api_base_url: "https://liangjiewis.com/v1"
   translation_api_model: "gemini-2.5-flash"
 
@@ -102,4 +102,5 @@ pdf_processing:
   # - 超过限制的文件只提取前 max_pages_for_outline 页
   # - 学术文档前几页通常包含目录，足以生成完整大纲
   # - 如果遇到 413 错误，可以降低这两个值（例如 5MB 和 8页）
+
 
